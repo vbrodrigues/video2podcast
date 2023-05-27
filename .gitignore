@@ -1,0 +1,7 @@
+*.txt
+*.mp4
+*.wav
+*.mp3
+*.ogg
+__pycache__
+__pycache__/*
