@@ -2,7 +2,7 @@ import argparse
 import os
 from gpt import create_chat, extract_keypoints
 from podcast import create_podcast
-from transcription import transcribe_audio
+from transcription import openai_transcribe, transcribe_audio
 from youtube import download_audio, get_video_description, get_video_title
 
 
@@ -18,6 +18,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Transform YouTube videos into a PodCast!')
 
     parser.add_argument('--url', type=str, help='URL of the YouTube video')
+    parser.add_argument('--person1', type=str, help='Name of the first person')
+    parser.add_argument('--person2', type=str, help='Name of the second person')
+    parser.add_argument('--transcribe_method', choices=['openai', 'local'], default='openai')
 
     args = parser.parse_args()
 
@@ -32,7 +35,10 @@ if __name__ == '__main__':
             download_audio(args.url, AUDIO_OUTPUT_PATH)
         
         if os.path.exists(TRANSCRIPTION_OUTPUT_PATH) is False:
-            transcribe_audio(AUDIO_OUTPUT_PATH, initial_prompt=context, output_path=TRANSCRIPTION_OUTPUT_PATH)
+            if args.transcribe_method == 'local':
+                transcribe_audio(AUDIO_OUTPUT_PATH, initial_prompt=context, output_path=TRANSCRIPTION_OUTPUT_PATH)
+            else:
+                openai_transcribe(AUDIO_OUTPUT_PATH, initial_prompt=context, output_path=TRANSCRIPTION_OUTPUT_PATH)
 
         if os.path.exists(KEYPOINTS_OUTPUT_PATH) is False:
             extract_keypoints(TRANSCRIPTION_OUTPUT_PATH, context=context, output_path=KEYPOINTS_OUTPUT_PATH, max_tokens=1000)
