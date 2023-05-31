@@ -18,8 +18,7 @@ def openai_transcribe(audio_path: str, initial_prompt: str = None, output_path: 
         print('Transcribing audio with OpenAI API:', audio_path)
         response = openai.Audio.transcribe(
             'whisper-1',
-            f,
-            language='en', 
+            f, 
             prompt=initial_prompt,
         )
 

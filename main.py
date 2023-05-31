@@ -21,6 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('--person1', type=str, help='Name of the first person')
     parser.add_argument('--person2', type=str, help='Name of the second person')
     parser.add_argument('--transcribe_method', choices=['openai', 'local'], default='openai')
+    parser.add_argument('--skip_podcast', action='store_true')
 
     args = parser.parse_args()
 
@@ -29,21 +30,22 @@ if __name__ == '__main__':
         video_description = get_video_description(args.url)
         context = video_title + ': ' + video_description if video_description is not None else video_title
 
-        print('\n\n--- Video2PodCast ---:\n\n', context)
+        print('\n\n--- Video2PodCast ---:\n\n', context, '\n\n')
 
-        if os.path.exists(AUDIO_OUTPUT_PATH) is False:
+        if not os.path.exists(AUDIO_OUTPUT_PATH):
             download_audio(args.url, AUDIO_OUTPUT_PATH)
         
-        if os.path.exists(TRANSCRIPTION_OUTPUT_PATH) is False:
+        if not os.path.exists(TRANSCRIPTION_OUTPUT_PATH):
             if args.transcribe_method == 'local':
                 transcribe_audio(AUDIO_OUTPUT_PATH, initial_prompt=context, output_path=TRANSCRIPTION_OUTPUT_PATH)
             else:
                 openai_transcribe(AUDIO_OUTPUT_PATH, initial_prompt=context, output_path=TRANSCRIPTION_OUTPUT_PATH)
 
-        if os.path.exists(KEYPOINTS_OUTPUT_PATH) is False:
-            extract_keypoints(TRANSCRIPTION_OUTPUT_PATH, context=context, output_path=KEYPOINTS_OUTPUT_PATH, max_tokens=1000)
+        if not os.path.exists(KEYPOINTS_OUTPUT_PATH):
+            extract_keypoints(TRANSCRIPTION_OUTPUT_PATH, context=context, output_path=KEYPOINTS_OUTPUT_PATH, max_tokens=2000)
 
-        if os.path.exists(CHAT_OUTPUT_PATH) is False:
-            create_chat(KEYPOINTS_OUTPUT_PATH, context=context, person1='Liz', person2='John', max_tokens=1000)
+        if not os.path.exists(CHAT_OUTPUT_PATH):
+            create_chat(KEYPOINTS_OUTPUT_PATH, context=context, person1='Liz', person2='John', max_tokens=2000)
 
-        create_podcast(CHAT_OUTPUT_PATH, person1='Liz', person2='John')
+        if not args.skip_podcast:
+            create_podcast(CHAT_OUTPUT_PATH, person1='Liz', person2='John')

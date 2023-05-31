@@ -1,10 +1,23 @@
 import os
-from elevenlabs import generate, save, set_api_key
+from elevenlabs import generate, save, set_api_key, Voice, VoiceSettings
 import subprocess
 
 
 set_api_key("")
 
+
+FEMALE = Voice(
+    voice_id="EXAVITQu4vr4xnSDxMaL",
+    name="Bella",
+    category="premade",
+    settings=VoiceSettings(stability=0.245, similarity_boost=0.75),
+)
+MALE = Voice(
+    voice_id="VR6AewLTigWG4xSOukaG",
+    name="Arnold",
+    category="premade",
+    settings=VoiceSettings(stability=0.15, similarity_boost=0.75),
+)
 
 def create_podcast(text_path: str, person1: str = 'Liz', person2: str = 'John', output_path: str = None) -> str:
 
@@ -29,7 +42,7 @@ def create_podcast(text_path: str, person1: str = 'Liz', person2: str = 'John', 
 
                 audio = generate(
                     text=speaker_text,
-                    voice="Bella" if current_speaker == person1 else "Arnold",
+                    voice=FEMALE if current_speaker == person1 else MALE,
                     model="eleven_monolingual_v1"
                 )
 

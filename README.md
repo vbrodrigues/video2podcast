@@ -41,8 +41,10 @@ Replace <youtube_url> with the URL of the YouTube video you want to generate a c
 Here's an example command to generate a conversation based on a YouTube video:
 
 ```shell
-python main.py --url https://www.youtube.com/watch?v=DrxiNfbr63s
+python main.py --url "https://www.youtube.com/watch?v=ZbdMMI6ty0o&ab_channel=Vsauce"
 ```
+
+You can listen to the output audio on this link: [Generated Podcast](https://drive.google.com/file/d/1wXq9VrRc6pKyA63QxQTwfDDpSeAPtE7t/view?usp=sharing)
 
 This command will generate a conversation audio file based on the YouTube video with the given URL.
 
