@@ -8,3 +8,5 @@ __pycache__/*
 
 !requirements.txt
 !example.wav
+
+.env

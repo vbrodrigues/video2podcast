@@ -1,62 +1,83 @@
 import os
-from elevenlabs import generate, save, set_api_key, Voice, VoiceSettings
 import subprocess
+from dotenv import load_dotenv
+from random import sample
+from elevenlabs import generate, save, set_api_key, Voice, VoiceSettings
 
 
-set_api_key("")
+class Podcast:
 
+    def __init__(self, data_path: str):
+        self.data_path = data_path
+        self.__ensure_data_path_exists()
 
-FEMALE = Voice(
-    voice_id="EXAVITQu4vr4xnSDxMaL",
-    name="Bella",
-    category="premade",
-    settings=VoiceSettings(stability=0.245, similarity_boost=0.75),
-)
-MALE = Voice(
-    voice_id="VR6AewLTigWG4xSOukaG",
-    name="Arnold",
-    category="premade",
-    settings=VoiceSettings(stability=0.15, similarity_boost=0.75),
-)
+        self.__set_elevenlabs_key()
 
-def create_podcast(text_path: str, person1: str = 'Liz', person2: str = 'John', output_path: str = None) -> str:
+        self.FEMALE = Voice(
+            voice_id="EXAVITQu4vr4xnSDxMaL",
+            name="Bella",
+            category="premade",
+            settings=VoiceSettings(stability=0.245, similarity_boost=0.75),
+        )
 
-    with open(text_path, 'r') as f:
-        text = f.read()
+        self.MALE = Voice(
+            voice_id="VR6AewLTigWG4xSOukaG",
+            name="Arnold",
+            category="premade",
+            settings=VoiceSettings(stability=0.15, similarity_boost=0.75),
+        )
 
-    output_path = output_path if output_path is not None else 'data/podcast/podcast.wav'
-    base_output_path = '/'.join(output_path.split('/')[:-1])
+    def __ensure_data_path_exists(self):
+        if not os.path.exists(self.data_path):
+            os.makedirs(self.data_path)
 
-    current_speaker = person1
-    order = 0
-    files_list = []
-    for sample_text in text.split('\n'):
+    def __set_elevenlabs_key(self):
+        load_dotenv('.env')
+        set_api_key(os.getenv('ELEVENLABS_API_KEY'))
 
-        if len(sample_text) > 1:
-            audio_path = base_output_path + f'/{order}-{current_speaker}.wav'
-            if not os.path.exists(audio_path):
+    def create_podcast(self, text_path: str, person1: str = 'Liz', person2: str = 'John', filename: str = 'podcast.wav') -> str:
 
-                print('Generating audio for:', current_speaker, 'Nº:', order)
+        output_path = os.path.join(self.data_path, filename)
 
-                speaker_text = sample_text.split(f'{current_speaker}:')[-1].strip()
+        if not os.path.exists(output_path):
 
-                audio = generate(
-                    text=speaker_text,
-                    voice=FEMALE if current_speaker == person1 else MALE,
-                    model="eleven_monolingual_v1"
-                )
+            with open(text_path, 'r') as f:
+                text = f.read()
 
-                save(audio, filename=audio_path)
+            current_speaker = person1
+            order = 0
+            files_list = []
+            for sample_text in text.split('\n'):
 
-            current_speaker = person1 if current_speaker == person2 else person2
-            files_list.append(audio_path)
-            order += 1
+                if len(sample_text) > 1 and not sample_text.startswith('[') and not sample_text.startswith('Podcast'):
 
-    print('Merging audios into a podcast...')
+                    if not sample_text.startswith(person1) and not sample_text.startswith(person2):
+                        current_speaker = person1 if current_speaker == person2 else person2
 
-    with open(base_output_path + '/audio_list.txt', 'w') as f:
-        for file in files_list:
-            print(file)
-            f.write(f"file {file.split('/')[-1]}\n")
-            
-    subprocess.run(f'ffmpeg -f concat -safe 0 -i {base_output_path}/audio_list.txt -c copy {output_path}', shell=True)
+                    audio_path = self.data_path + f'/{order}-{current_speaker}.wav'
+                    if not os.path.exists(audio_path):
+
+                        print('Generating audio for:', current_speaker, 'Nº:', order)
+
+                        speaker_text = sample_text.split(f'{current_speaker}:')[-1].strip()
+
+                        audio = generate(
+                            text=speaker_text,
+                            voice=self.FEMALE if current_speaker == person1 else self.MALE,
+                            model="eleven_monolingual_v1"
+                        )
+
+                        save(audio, filename=audio_path)
+
+                    current_speaker = person1 if current_speaker == person2 else person2
+                    files_list.append(audio_path)
+                    order += 1
+
+            print('Merging audios into a podcast...')
+
+            with open(self.data_path + '/audio_list.txt', 'w') as f:
+                for file in files_list:
+                    print(file)
+                    f.write(f"file {file.split('/')[-1]}\n")
+                    
+            subprocess.run(f'ffmpeg -f concat -safe 0 -i {self.data_path}/audio_list.txt -c copy {output_path}', shell=True)

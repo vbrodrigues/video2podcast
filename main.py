@@ -1,16 +1,18 @@
 import argparse
-import os
-from gpt import create_chat, extract_keypoints
-from podcast import create_podcast
-from transcription import openai_transcribe, transcribe_audio
-from youtube import download_audio, get_video_description, get_video_title
+from chat import Chat
+from podcast import Podcast
+from transcription import Transcriber
+from youtube import VideoHandler
 
 
-AUDIO_OUTPUT_PATH='./data/audios/audio.mp4'
-TRANSCRIPTION_OUTPUT_PATH='./data/transcriptions/audio.txt'
-KEYPOINTS_OUTPUT_PATH='./data/keypoints/keypoints.txt'
-CHAT_OUTPUT_PATH='./data/chats/chat.txt'
-PODCAST_OUTPUT_PATH='./data/podcast/podcast.wav'
+AUDIO_OUTPUT_PATH='./data/audios'
+TRANSCRIPTION_OUTPUT_PATH='./data/transcriptions'
+CHAT_OUTPUT_PATH='./data/chats'
+PODCAST_OUTPUT_PATH='./data/podcast'
+
+
+def remove_special_chars(text: str) -> str:
+    return ''.join(e for e in text if e.isalnum() or e.isspace())
 
 
 if __name__ == '__main__':
@@ -26,26 +28,22 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.url:
-        video_title = get_video_title(args.url)
-        video_description = get_video_description(args.url)
+
+        video_handler = VideoHandler(AUDIO_OUTPUT_PATH)
+        transcriber = Transcriber(TRANSCRIPTION_OUTPUT_PATH, transcription_mode=args.transcribe_method)
+        chat = Chat(CHAT_OUTPUT_PATH)
+        podcast = Podcast(PODCAST_OUTPUT_PATH)
+
+        video_title = video_handler.get_video_title(args.url)
+        video_description = video_handler.get_video_description(args.url)
         context = video_title + ': ' + video_description if video_description is not None else video_title
 
         print('\n\n--- Video2PodCast ---:\n\n', context, '\n\n')
 
-        if not os.path.exists(AUDIO_OUTPUT_PATH):
-            download_audio(args.url, AUDIO_OUTPUT_PATH)
-        
-        if not os.path.exists(TRANSCRIPTION_OUTPUT_PATH):
-            if args.transcribe_method == 'local':
-                transcribe_audio(AUDIO_OUTPUT_PATH, initial_prompt=context, output_path=TRANSCRIPTION_OUTPUT_PATH)
-            else:
-                openai_transcribe(AUDIO_OUTPUT_PATH, initial_prompt=context, output_path=TRANSCRIPTION_OUTPUT_PATH)
-
-        if not os.path.exists(KEYPOINTS_OUTPUT_PATH):
-            extract_keypoints(TRANSCRIPTION_OUTPUT_PATH, context=context, output_path=KEYPOINTS_OUTPUT_PATH, max_tokens=2000)
-
-        if not os.path.exists(CHAT_OUTPUT_PATH):
-            create_chat(KEYPOINTS_OUTPUT_PATH, context=context, person1='Liz', person2='John', max_tokens=2000)
+        audio_path = video_handler.download_audio(args.url, filename='_'.join(remove_special_chars(video_title).split(' ')) + '.mp4')
+        transcription_path = transcriber.transcribe(audio_path, initial_prompt=context, filename='_'.join(remove_special_chars(video_title).split(' ')) + '.txt')
+        keypoints_path = chat.extract_keypoints(transcription_path, context=context, max_tokens=2000, filename='keypoints_' + '_'.join(remove_special_chars(video_title).split(' ')) + '.txt')
+        chat_path = chat.create_chat(keypoints_path, context=context, person1='Liz', person2='John', max_tokens=2000, filename='chat_' + '_'.join(remove_special_chars(video_title).split(' ')) + '.txt')
 
         if not args.skip_podcast:
-            create_podcast(CHAT_OUTPUT_PATH, person1='Liz', person2='John')
+            podcast.create_podcast(chat_path, person1='Liz', person2='John')

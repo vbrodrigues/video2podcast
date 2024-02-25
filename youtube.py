@@ -1,26 +1,34 @@
+import os
 from pytube import YouTube
 
 
-def get_video_title(url) -> str:
-    yt = YouTube(url)
-    return yt.title
+class VideoHandler:
 
+    def __init__(self, data_path: str):
+        self.data_path = data_path
+        self.__ensure_data_path_exists()
 
-def get_video_description(url) -> str:
-    yt = YouTube(url)
-    return yt.description
+    def __ensure_data_path_exists(self):
+        if not os.path.exists(self.data_path):
+            os.makedirs(self.data_path)
 
+    def get_video_title(self, url) -> str:
+        yt = YouTube(url)
+        return yt.title
 
-def download_audio(url, path):
-    print('Downloading audio from YouTube video:', url)
-    yt = YouTube(url)
-    output_path = '/'.join(path.split('/')[:-1])
-    filename = path.split('/')[-1]
-    yt.streams.filter(only_audio=True).first().download(output_path, filename=filename)
-    print('Audio saved on:', path)
-    return yt.title
+    def get_video_description(self, url) -> str:
+        yt = YouTube(url)
+        return yt.description
 
-def download_video(url, path):
-    yt = YouTube(url)
-    yt.streams.filter(progressive=True).first().download(path)
-    return yt.title
+    def download_audio(self, url, filename: str = 'audio.mp4') -> str:
+        yt = YouTube(url)
+        if not os.path.exists(os.path.join(self.data_path, filename)):
+            print('Downloading audio...')
+            yt.streams.filter(only_audio=True).first().download(self.data_path, filename=filename)
+        print('Audio on:', self.data_path)
+        return os.path.join(self.data_path, filename)
+
+    def download_video(self, url):
+        yt = YouTube(url)
+        yt.streams.filter(progressive=True).first().download(self.data_path)
+        return yt.title
