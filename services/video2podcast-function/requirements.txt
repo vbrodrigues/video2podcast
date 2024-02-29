@@ -1,0 +1,9 @@
+firebase_functions~=0.1.0
+python-dotenv
+pytube
+tiktoken
+openai
+elevenlabs
+fastapi
+uvicorn
+google-cloud-storage
