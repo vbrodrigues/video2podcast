@@ -22,9 +22,19 @@ class RequestDTO(BaseModel):
     skip_podcast: bool
 
 
+class PubSubMessage(BaseModel):
+    data: str
+    message_id: str
+    
+
+class RequestPubSubDTO(BaseModel):
+    message: PubSubMessage
+    subscription: str
+
+
 class ResponseDTO(BaseModel):
     success: bool
-    message: Optional[str]
+    message: Optional[str] = None
 
 
 AUDIO_OUTPUT_PATH='./data/audios'
@@ -37,10 +47,8 @@ def remove_special_chars(text: str) -> str:
     return ''.join(e for e in text if e.isalnum() or e.isspace())
 
 
-@app.post('/video2podcast')
-def video2podcast(request: RequestDTO) -> ResponseDTO:
+def main(request: RequestDTO) -> ResponseDTO:
     try:
-
         audio_path = None
         transcription_path = None
         keypoints_path = None
@@ -99,3 +107,18 @@ def video2podcast(request: RequestDTO) -> ResponseDTO:
         if podcast_path and os.path.exists(podcast_path):
             os.remove(podcast_path)
         print('Files removed!')
+
+
+@app.post('/video2podcast')
+def video2podcast(request: RequestDTO) -> ResponseDTO:
+    return main(request)
+
+
+@app.post('/video2podcast-pubsub')
+def video2podcast_pubsub(request: RequestPubSubDTO) -> ResponseDTO:
+    import base64
+    import json
+
+    message = json.loads(base64.b64decode(request.message.data).decode('utf-8'))
+    print('Received message:', message)
+    return main(RequestDTO(**message))
