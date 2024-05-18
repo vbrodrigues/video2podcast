@@ -96,16 +96,16 @@ def main(request: RequestDTO) -> ResponseDTO:
     except Exception as e:
         return ResponseDTO(success=False, message=str(e))
     finally:
-        if audio_path and os.path.exists(audio_path):
-            os.remove(audio_path)
-        if transcription_path and os.path.exists(transcription_path):
-            os.remove(transcription_path)
-        if keypoints_path and os.path.exists(keypoints_path):
-            os.remove(keypoints_path)
-        if chat_path and os.path.exists(chat_path):
-            os.remove(chat_path)
-        if podcast_path and os.path.exists(podcast_path):
-            os.remove(podcast_path)
+        # if audio_path and os.path.exists(audio_path):
+        #     os.remove(audio_path)
+        # if transcription_path and os.path.exists(transcription_path):
+        #     os.remove(transcription_path)
+        # if keypoints_path and os.path.exists(keypoints_path):
+        #     os.remove(keypoints_path)
+        # if chat_path and os.path.exists(chat_path):
+        #     os.remove(chat_path)
+        # if podcast_path and os.path.exists(podcast_path):
+        #     os.remove(podcast_path)
         print('Files removed!')
 
 

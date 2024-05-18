@@ -15,7 +15,7 @@ class PodcastElevenlabs:
             voice_id="EXAVITQu4vr4xnSDxMaL",
             name="Bella",
             category="premade",
-            settings=VoiceSettings(stability=0.245, similarity_boost=0.75),
+            settings=VoiceSettings(stability=0.215, similarity_boost=0.75),
         )
 
         self.MALE = Voice(
@@ -59,7 +59,7 @@ class PodcastElevenlabs:
                         audio = el.generate(
                             text=speaker_text,
                             voice=self.FEMALE if current_speaker == person1 else self.MALE,
-                            model="eleven_monolingual_v1"
+                            model="eleven_multilingual_v2"
                         )
 
                         save(audio, filename=audio_path)
