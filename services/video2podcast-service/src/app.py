@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from youtube import VideoHandler
 from transcription import Transcriber
 from chat import Chat
-from podcast import Podcast
+from podcast import PodcastOpenai, PodcastElevenlabs
 from google.cloud.storage import Client as StorageClient
 
 
@@ -61,7 +61,7 @@ def main(request: RequestDTO) -> ResponseDTO:
             video_handler = VideoHandler(AUDIO_OUTPUT_PATH)
             transcriber = Transcriber(TRANSCRIPTION_OUTPUT_PATH, transcription_mode='openai')
             chat = Chat(CHAT_OUTPUT_PATH)
-            podcast = Podcast(PODCAST_OUTPUT_PATH)
+            podcast = PodcastElevenlabs(PODCAST_OUTPUT_PATH)
 
             video_title = video_handler.get_video_title(request.video_url)
             video_description = video_handler.get_video_description(request.video_url)
@@ -122,3 +122,7 @@ def video2podcast_pubsub(request: RequestPubSubDTO) -> ResponseDTO:
     message = json.loads(base64.b64decode(request.message.data).decode('utf-8'))
     print('Received message:', message)
     return main(RequestDTO(**message))
+
+if __name__ == '__main__':
+    import uvicorn
+    uvicorn.run(app, host='localhost', port=8080)
